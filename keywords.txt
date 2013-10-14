@@ -1,0 +1,12 @@
+eEEPROM		KEYWORD1
+read		KEYWORD2
+write		KEYWORD2
+readWord	KEYWORD2
+writeWord	KEYWORD2
+readLong	KEYWORD2
+writeFloat	KEYWORD2
+readDouble	KEYWORD2
+writeDouble	KEYWORD2
+readData	KEYWORD2
+writeData	KEYWORD2
+memFill		KEYWORD2
