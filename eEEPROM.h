@@ -72,10 +72,12 @@ http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-
  * change will spread write cycles to the EEProm equally over the whole array.
  * This improves lifetime of the EEProm by N/2 where N is the number of array elements
  * (Not by N, because the former value needs to be invalidated).
+ * Static member TYPE  is actually only a hint that allow the the template methods to derive
+ * the correct type of the member "value".
  */
-typedef struct { int8_t  current : 1; int8_t  value :  7; } s_rrint7;
-typedef struct { int16_t current : 1; int16_t value : 15; } s_rrint15;
-typedef struct { int32_t current : 1; int32_t value : 31; } s_rrint31;
+typedef struct { int8_t  current : 1; int8_t  value :  7; static int8_t  TYPE; } s_rrint7;
+typedef struct { int16_t current : 1; int16_t value : 15; static int16_t TYPE; } s_rrint15;
+typedef struct { int32_t current : 1; int32_t value : 31; static int32_t TYPE; } s_rrint31;
 
 class eEEPROMClass
 {
@@ -105,20 +107,13 @@ class eEEPROMClass
 
     void showPgmString (PGM_P s);
 
-    template <class RRINT> void rrInit(RRINT * rrint, uint16_t count, int32_t value)
-    {
-    	uint16_t addr = (uint16_t)rrint;
-    	// no need to reset the whole array since first will become current anyway
-    	//for (uint8_t i=1; i<count; i++) write(addr, 0);
-    	RRINT first;
-    	first.current = 1;
-    	first.value   = value;
-    	writeData(addr, &first, sizeof(first));
-    }
-
-    template <class RRINT> void rrWrite(RRINT * rrint, uint16_t count, int8_t value)
+    template <class RRINT> void rrWrite(RRINT * rrint, uint16_t count, __decltype(RRINT::TYPE) value)
     {
     	RRINT temp;
+		RRINT next;
+		next.current = 1;
+		next.value   = value;
+
     	for (uint16_t i=0; i<count; i++)
     	{
         	uint16_t addr1 = (uint16_t)&rrint[i];
@@ -128,7 +123,6 @@ class eEEPROMClass
     			if (temp.value==value) return; // no change
 
     			uint16_t addr2 = (uint16_t)&rrint[(i+1)%count];
-    			RRINT    next  = { current : 1, value : value };
     			temp.current = 0;
 
     			writeData(addr2, &next, sizeof(next));
@@ -136,10 +130,12 @@ class eEEPROMClass
     			return;
     		}
     	}
-    	rrInit(rrint, count, value);
+
+    	uint16_t addr = (uint16_t)rrint;
+    	writeData(addr, &next, sizeof(next));
     }
 
-    template <class RRINT> int32_t rrRead(RRINT * rrint, uint16_t count)
+    template <class RRINT> __decltype(RRINT::TYPE	) rrRead(RRINT * rrint, uint16_t count)
     {
     	uint16_t addr = (uint16_t)rrint;
     	RRINT temp;
@@ -174,9 +170,9 @@ extern eEEPROMClass eEEPROM;
 /*
  * Macros to transparently init/read/write such round robin arrays.
  */
-#define eEE_RRINIT(NAME,VALUE)  eEEPROM.rrInit( &NAME[0], sizeof(NAME)/sizeof(NAME[0]), VALUE)
-#define eEE_RRWRITE(NAME,VALUE) eEEPROM.rrWrite(&NAME[0], sizeof(NAME)/sizeof(NAME[0]), VALUE)
-#define eEE_RRREAD(NAME)        eEEPROM.rrRead( &NAME[0], sizeof(NAME)/sizeof(NAME[0]))
+#define eEE_RRINIT(NAME,VALUE)  eEEPROM.rrInit( NAME, sizeof(NAME)/sizeof(NAME[0]), VALUE)
+#define eEE_RRWRITE(NAME,VALUE) eEEPROM.rrWrite(NAME, sizeof(NAME)/sizeof(NAME[0]), VALUE)
+#define eEE_RRREAD(NAME)        eEEPROM.rrRead( NAME, sizeof(NAME)/sizeof(NAME[0]))
 
 // eEEPROM_h
 #endif
