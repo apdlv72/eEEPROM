@@ -14,10 +14,10 @@ because of the extra overhead to read before writing when there really was a cha
 same if there was no change, Should this be a problem anyway, the doWrite() method can be used
 to force unconditional writing to the EEPROM.
 
-Finally, it adds a macro to conveniently check if the content that should reside in the EEProm exceed
-its maximum capacity. 
+Beside the macros to conveniently read and write EEProm data, there is also a macro to check if the
+content that should reside in the EEProm exceed its maximum capacity.
 
-To make these macros macros work, you must define a structure that wraps everything you
+To make all these macros macros work, you must define a structure that wraps everything you
 need to store in EEProm as a pointer to address 0.
 
   struct mydata { int  a; long b; } * EE = 0;
@@ -40,12 +40,33 @@ hassle of computing addreses and data sizes:
   
   eEE_READ(EE->a, i);
 
+Last but not least there is a macro that actually is kond off-topic, because it does not deal
+with data in EEProm but in Flash. However, because it is very useful to circumvent RAM limitations,
+when your sketch grows larger on the one hand, and it is too tiny to put it into a separate library,
+I nevertheless included  it in to this class.
+
+When you put lots of Serial.print("Some static text") into your program you will run into apparently
+non-deterministic behavior of your code or your sketch even town start at at. The reason is that
+string like that will reside in RAM and eat up this memory for your program code. The macro PPRINT()
+will put these strings into flash. (Actually they have been there anyway and copied into RAM at
+boot time). Just use
+
+	PPRINT("Some static text")
+
+whenever you need to output some static string instead of Serial.print(). This should significantly
+reduce RAM use if you have lots of these string. You can check the effects with the "avr-size"
+command line tool included in your Arduino environment.
+There is a nice tutorial here:
+
+http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-sketch/?lang=en
+
 */
 
 #ifndef eEEPROM_h
 #define eEEPROM_h
 
 #include <inttypes.h>
+#include <avr/pgmspace.h>
 
 class eEEPROMClass
 {
@@ -72,6 +93,8 @@ class eEEPROMClass
     void writeData(int addr, const void * buf, int len);
     
     void memFill(int addr, uint8_t data, uint16_t len);
+
+    void showPgmString (PGM_P s);
 };
 
 extern eEEPROMClass eEEPROM;
@@ -81,7 +104,9 @@ extern eEEPROMClass eEEPROM;
 #define eEE_READ(EETOKEN, DEST) { eEEPROM.readData( eEE_ADDR(EETOKEN), &(DEST), sizeof(DEST));    }
 #define eEE_ZERO(EETOKEN)       { eEEPROM.memFill(eEE_ADDR(EETOKEN), 0, sizeof(EETOKEN)); }
 
-#define eEE_CHECKSIZE(DATA) struct FailOnEEPromExceess { int c[E2END-sizeof(DATA)]; }; 
+#define eEE_CHECKSIZE(DATA) struct FailOnEEPromExceess { int c[E2END-sizeof(DATA)]; };
 
-// eEEPROM_nh
+#define PPRINT(TEXT) eEEPROM.showPgmString(PSTR(TEXT))
+
+// eEEPROM_h
 #endif

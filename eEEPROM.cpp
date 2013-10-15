@@ -1,6 +1,7 @@
-#include <avr/eeprom.h>
-//#include "Arduino.h"
+#include "Arduino.h"
 #include "eEEPROM.h"
+
+#include <avr/eeprom.h>
 
 uint8_t eEEPROMClass::read(int addr)
 {
@@ -91,6 +92,15 @@ void eEEPROMClass::memFill(int addr, uint8_t data, uint16_t len)
 	for (; len>0; len--, addr++)
 	{
 		write(addr, data);
+	}
+}
+
+void eEEPROMClass::showPgmString (PGM_P s)
+{
+	char c;
+	while ((c = pgm_read_byte(s++)) != 0)
+	{
+		Serial.print(c);
 	}
 }
 

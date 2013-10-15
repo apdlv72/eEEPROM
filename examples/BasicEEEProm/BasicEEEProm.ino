@@ -12,10 +12,12 @@ void setup()
     long l = 12345678;
     mystruct s = { f:3.14159265359,  d:2.71828182846 };
     
+    Serial.begin(9600);
+
+    PPRINT("Writing to EEProm");
     eEE_WRITE(i, EE->a); 
     eEE_WRITE(l, EE->b); 
     eEE_WRITE(s, EE->c); 
-    Serial.begin(9600);
 }
 
 void loop()
@@ -30,9 +32,9 @@ void loop()
     eEE_READ(EE->c.f, f); 
     eEE_READ(EE->c.d, d); 
     
-    Serial.println(i);
-    Serial.println(l);
-    Serial.println(f);
-    Serial.println(d);
+    PPRINT("Read i:"); Serial.println(i);
+    PPRINT("Read l:"); Serial.println(l);
+    PPRINT("Read f:"); Serial.println(f);
+    PPRINT("Read d:"); Serial.println(d);
 }
 
