@@ -64,6 +64,7 @@ http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-
 
 #include <inttypes.h>
 #include <avr/pgmspace.h>
+#include <Arduino.h>
 
 /*
  * Structure to store integer values round robin.
@@ -78,6 +79,7 @@ http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-
 typedef struct { int8_t  current : 1; int8_t  value :  7; static int8_t  TYPE; } s_rrint7;
 typedef struct { int16_t current : 1; int16_t value : 15; static int16_t TYPE; } s_rrint15;
 typedef struct { int32_t current : 1; int32_t value : 31; static int32_t TYPE; } s_rrint31;
+typedef struct { uint8_t current; uint8_t data; } s_rrstruct;
 
 class eEEPROMClass
 {
@@ -105,12 +107,13 @@ class eEEPROMClass
     
     void memFill(int addr, uint8_t data, uint16_t len);
 
-    void showPgmString (PGM_P s);
+    void rrWriteStruct(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct);
+    void rrReadStruct(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct);
 
+    // template RRINT will become one of s_rrint{7|15|31} through the macro eEE_RRWRITE
     template <class RRINT> void rrWrite(RRINT * rrint, uint16_t count, __decltype(RRINT::TYPE) value)
     {
-    	RRINT temp;
-		RRINT next;
+    	RRINT temp, next;
 		next.current = 1;
 		next.value   = value;
 
@@ -135,6 +138,7 @@ class eEEPROMClass
     	writeData(addr, &next, sizeof(next));
     }
 
+    // template RRINT will become one of s_rrint{7|15|31} through the macro eEE_RRREAD
     template <class RRINT> __decltype(RRINT::TYPE	) rrRead(RRINT * rrint, uint16_t count)
     {
     	uint16_t addr = (uint16_t)rrint;
@@ -147,6 +151,7 @@ class eEEPROMClass
     	return 0;
     }
 
+    void showPgmString (PGM_P s);
 };
 
 extern eEEPROMClass eEEPROM;
@@ -168,11 +173,18 @@ extern eEEPROMClass eEEPROM;
 #define eEE_rrint31_t(NAME,COUNT) s_rrint31 NAME[COUNT]
 
 /*
+ * Same for arbitrary user structures.
+ */
+#define eEE_rrstruct(NAME,COUNT,DEF) struct NAME { uint8_t current; DEF data; } NAME[COUNT]
+
+/*
  * Macros to transparently init/read/write such round robin arrays.
  */
-#define eEE_RRINIT(NAME,VALUE)  eEEPROM.rrInit( NAME, sizeof(NAME)/sizeof(NAME[0]), VALUE)
 #define eEE_RRWRITE(NAME,VALUE) eEEPROM.rrWrite(NAME, sizeof(NAME)/sizeof(NAME[0]), VALUE)
 #define eEE_RRREAD(NAME)        eEEPROM.rrRead( NAME, sizeof(NAME)/sizeof(NAME[0]))
+
+#define eEE_RRWRITESTRUCT(NAME,SOURCE) eEEPROM.rrWriteStruct((s_rrstruct*)&(NAME), sizeof(NAME), sizeof(NAME)/sizeof(NAME[0]), &(SOURCE));
+#define eEE_RRREADSTRUCT (NAME,TARGET) eEEPROM.rrReadStruct( (s_rrstruct*)&(NAME), sizeof(NAME), sizeof(NAME)/sizeof(NAME[0]),  &(TARGET));
 
 // eEEPROM_h
 #endif

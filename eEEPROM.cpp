@@ -104,4 +104,45 @@ void eEEPROMClass::showPgmString (PGM_P s)
 	}
 }
 
+void eEEPROMClass::rrWriteStruct(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct)
+{
+	for (uint16_t i=0; i<count; i++)
+	{
+		s_rrstruct test;
+		uint16_t addr1 = (uint16_t)&rrstruct[i];
+		readData(addr1, &test, sizeof(test));
+		if (test.current)
+		{
+			uint16_t addr2 = (uint16_t)&(rrstruct[(i+1)%count]);
+			uint16_t addr3 = (uint16_t)&(rrstruct[(i+1)%count].data);
+
+			writeData(addr2, &test, sizeof(test)); // mark next entry current
+			writeData(addr3, user_struct, size);   // write new value
+
+			test.current = 0;
+			writeData(addr1, &test, sizeof(test)); // invalidate previous entry
+			return;
+		}
+	}
+}
+
+void eEEPROMClass::rrReadStruct(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct)
+{
+	for (uint16_t i=0; i<count; i++)
+	{
+		s_rrstruct test;
+		uint16_t addr1 = (uint16_t)&rrstruct[i];
+		readData(addr1, &test, sizeof(test));
+		if (test.current)
+		{
+			uint16_t addr2 = (uint16_t)&(rrstruct[i].data);
+			readData(addr2, user_struct, size);   // write new value
+			return;
+		}
+	}
+	memset(user_struct, 0, size);
+}
+
+
+
 eEEPROMClass eEEPROM;

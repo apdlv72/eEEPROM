@@ -14,7 +14,7 @@ explained below may even be increased.
 // I am from cologne ;)
 const static uint16_t MAGIC = 4711;
 
-// everythin that needs to go to EEProm is inside the follwoing structure:
+// everythin that needs to go to EEProm is inside the following structure:
 struct mydata 
 { 
   // magic to detect if EEProm was initialized for the first time
@@ -22,20 +22,20 @@ struct mydata
   // number of times this device was started
   eEE_rrint15_t(starts, 10);
   // uptime in hours spread over 10*4 bytes can store up to 122k years (2^30-1)/24,
-  // however eeprom write cycles will be excessed in approx. 57 years (100k*10/2)/24/365)
+  // however eeprom write cycles will be exceeded in approx. 57 years (100k*10/2)/24/365)
   // when written every hour
   eEE_rrint31_t(uptime, 10); 
 } 
 * EE = 0;
 
-// macro checks whether we might exceeded the EEProms capacity
+// check and raise an error if data exceeds EEProm capacity
 eEE_CHECKSIZE(*EE)
 
 uint16_t uptime_last = 0;
 uint16_t uptime      = 0;
 uint32_t starts      = 0;
 
-
+// the setup routine runs once when you press reset:
 void setup()
 {
   Serial.begin(9600);
@@ -62,7 +62,7 @@ void setup()
   Serial.print("setup: uptime: "); Serial.println(uptime);
 }
 
-
+// the loop routine runs over and over again forever:
 void loop()
 {
   // write uptime (in hours) whenever it changes
