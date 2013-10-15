@@ -65,6 +65,18 @@ http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-
 #include <inttypes.h>
 #include <avr/pgmspace.h>
 
+/*
+ * Structure to store integer values round robin.
+ * The MSB bit defines which value is the current one and the remaining bits store the actual value.
+ * Using an array of such structures and moving the current flag to the next element upon every
+ * change will spread write cycles to the EEProm equally over the whole array.
+ * This improves lifetime of the EEProm by N/2 where N is the number of array elements
+ * (Not by N, because the former value needs to be invalidated).
+ */
+typedef struct { int8_t  current : 1; int8_t  value :  7; } s_rrint7;
+typedef struct { int16_t current : 1; int16_t value : 15; } s_rrint15;
+typedef struct { int32_t current : 1; int32_t value : 31; } s_rrint31;
+
 class eEEPROMClass
 {
   public:
@@ -92,6 +104,53 @@ class eEEPROMClass
     void memFill(int addr, uint8_t data, uint16_t len);
 
     void showPgmString (PGM_P s);
+
+    template <class RRINT> void rrInit(RRINT * rrint, uint16_t count, int32_t value)
+    {
+    	uint16_t addr = (uint16_t)rrint;
+    	// no need to reset the whole array since first will become current anyway
+    	//for (uint8_t i=1; i<count; i++) write(addr, 0);
+    	RRINT first;
+    	first.current = 1;
+    	first.value   = value;
+    	writeData(addr, &first, sizeof(first));
+    }
+
+    template <class RRINT> void rrWrite(RRINT * rrint, uint16_t count, int8_t value)
+    {
+    	RRINT temp;
+    	for (uint16_t i=0; i<count; i++)
+    	{
+        	uint16_t addr1 = (uint16_t)&rrint[i];
+    		readData(addr1, &temp, sizeof(temp));
+    		if (temp.current)
+    		{
+    			if (temp.value==value) return; // no change
+
+    			uint16_t addr2 = (uint16_t)&rrint[(i+1)%count];
+    			RRINT    next  = { current : 1, value : value };
+    			temp.current = 0;
+
+    			writeData(addr2, &next, sizeof(next));
+    			writeData(addr1, &temp, sizeof(temp));
+    			return;
+    		}
+    	}
+    	rrInit(rrint, count, value);
+    }
+
+    template <class RRINT> int32_t rrRead(RRINT * rrint, uint16_t count)
+    {
+    	uint16_t addr = (uint16_t)rrint;
+    	RRINT temp;
+    	for (uint16_t i=0; i<count; i++, addr+=sizeof(s_rrint7))
+    	{
+    		readData(addr, &temp, sizeof(temp));
+    		if (temp.current) return temp.value;
+    	}
+    	return 0;
+    }
+
 };
 
 extern eEEPROMClass eEEPROM;
@@ -104,6 +163,20 @@ extern eEEPROMClass eEEPROM;
 #define eEE_CHECKSIZE(DATA) struct FailOnEEPromExceess { int c[E2END-sizeof(DATA)]; };
 
 #define PPRINT(TEXT) eEEPROM.showPgmString(PSTR(TEXT))
+
+/*
+ * Macros that define round robin integer arrays with user defined size;
+ */
+#define eEE_rrint7_t(NAME,COUNT)  s_rrint7  NAME[COUNT]
+#define eEE_rrint15_t(NAME,COUNT) s_rrint15 NAME[COUNT]
+#define eEE_rrint31_t(NAME,COUNT) s_rrint31 NAME[COUNT]
+
+/*
+ * Macros to transparently init/read/write such round robin arrays.
+ */
+#define eEE_RRINIT(NAME,VALUE)  eEEPROM.rrInit( &NAME[0], sizeof(NAME)/sizeof(NAME[0]), VALUE)
+#define eEE_RRWRITE(NAME,VALUE) eEEPROM.rrWrite(&NAME[0], sizeof(NAME)/sizeof(NAME[0]), VALUE)
+#define eEE_RRREAD(NAME)        eEEPROM.rrRead( &NAME[0], sizeof(NAME)/sizeof(NAME[0]))
 
 // eEEPROM_h
 #endif
