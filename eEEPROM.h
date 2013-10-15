@@ -74,7 +74,8 @@ http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-
  * This improves lifetime of the EEProm by N/2 where N is the number of array elements
  * (Not by N, because the former value needs to be invalidated).
  * Static member TYPE  is actually only a hint that allow the the template methods to derive
- * the correct type of the member "value".
+ * the correct type of the member "value". It should NOT eat up any valuable RAM nor EEProm
+ * space since it is static, moreover its value never read.
  */
 typedef struct { int8_t  current : 1; int8_t  value :  7; static int8_t  TYPE; } s_rrint7;
 typedef struct { int16_t current : 1; int16_t value : 15; static int16_t TYPE; } s_rrint15;

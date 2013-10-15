@@ -1,7 +1,8 @@
 eEEPROM
 =======
 
-Arduino library to ease the use of the uC's EEPROM. 
+Arduino library to ease the usage of the uC's EEPROM.
+ 
 It does so by providing some functions and macros to write more complex data than just
 single bytes. The "e" in eEEPROM stands for "easy" and the naming claims to differ as little
 as possible form the "normal" Arduino EEPROM library such that one can switch back and forth
@@ -17,7 +18,7 @@ to force unconditional writing to the EEPROM.
 Beside the macros to conveniently read and write EEProm data, there is also a macro to check if the
 content that should reside in the EEProm exceed its maximum capacity.
 
-To make all these macros macros work, you must define a structure that wraps everything you
+To make these macros macros work, you must define a structure that wraps everything you
 need to store in EEProm as a pointer to address 0.
 
 	struct mydata { int  a; long b; } * EE = 0;
@@ -36,6 +37,47 @@ hassle of computing addreses and data sizes:
 	
 	int i;  
 	eEE_READ(EE->a, i);
+
+Sometimes you need to store values quite often and will run into the 100k write cycles limits
+in a couple of hours or even minutes. To circumvent this, you would need to distribute the writes
+to single EEProm cell equally over a bunch of bytes. This is where the round robin macros come in.
+With the following definition (inside the EE struct depicted above):
+
+	eEE_rrint7_t(myA,200);
+
+you creat an array of 200 8-bit integers where the MSB is used as a flag which one is the current one.
+To access the current value, the macros 
+
+	eEE_RRWRITE(EE->myA,  value);
+	int8_t value = eEE_RRREAD(EE->myA);  
+
+will write resp. read the value stored and extend the life time of your EEProm by a factor or 200/2
+thus at least 100k*200 = 20mio write operations or even more, because the library still will take care
+not to overwrite the target with the same value.
+Besides the 7-bit integer, there are version for 15 and 31 bit as well.
+
+The same approach can be extended to more complex data types than just integer values.
+For this to work, you wrap your data in a struct as you please and use the macro as follows:
+
+	typedef struct { int a; int b; } mystruct;
+
+	struct mydata 
+	{ 
+		eEE_rrstruct(myStruct,10,mystruct);
+	} * EE = 0;
+  
+Reading and writing the structs is provided by the macros
+
+	mystruct init = { a:111, b:222 };
+	eEE_RRWRITESTRUCT(EE->myStruct, init);
+
+	mystruct s;
+	eEE_RRWRITESTRUCT(EE->myStruct, s);
+	
+In this case, because a comparison might be quite time consuming for large structs, no check is 
+performed if current and future values do match, but new values written always.
+(however, in terms of single bytes, the checks will still be performed in the next array entry
+that is about to become the current one).
 
 Last but not least there is a macro that actually is kind off-topic, because it does not deal
 with data in EEProm but in Flash. However, because it is very useful to circumvent RAM limitations,
@@ -57,3 +99,5 @@ There is a nice tutorial here:
 
 http://www.leonardomiliani.com/2012/come-sapere-loccupazione-di-ram-del-proprio-sketch/?lang=en 
      
+Note that the PPRINT macro will cause many compiler warnings regarding non-initialized data.
+You safely ignore this since it is due to a gcc bug which probably might get fixed in the future.
