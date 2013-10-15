@@ -20,9 +20,8 @@ content that should reside in the EEProm exceed its maximum capacity.
 To make all these macros macros work, you must define a structure that wraps everything you
 need to store in EEProm as a pointer to address 0.
 
-  struct mydata { int  a; long b; } * EE = 0;
-
-  eEE_CHECKSIZE(*EE) // No semicolon here
+	struct mydata { int  a; long b; } * EE = 0;
+	eEE_CHECKSIZE(*EE) // No semicolon here
 
 The macro eEE_CHECKSIZE will fail with an error message, when the total size of the
 structure exceeds the maximum EEProm capacity. The error message however is a bit cryptic.
@@ -32,15 +31,13 @@ into funny problems at runtime anyway.
 Reading and writing the tokens in EEProm then will become merely a childs play without the 
 hassle of computing addreses and data sizes:
 
-  long l;
-  
-  eEE_WRITE(l, EE->b);
+	long l;
+	eEE_WRITE(l, EE->b);
 
-  int i;
-  
-  eEE_READ(EE->a, i);
+	int i;
+	eEE_READ(EE->a, i);
 
-Last but not least there is a macro that actually is kond off-topic, because it does not deal
+Last but not least there is a macro that actually is kind off-topic, because it does not deal
 with data in EEProm but in Flash. However, because it is very useful to circumvent RAM limitations,
 when your sketch grows larger on the one hand, and it is too tiny to put it into a separate library,
 I nevertheless included  it in to this class.
