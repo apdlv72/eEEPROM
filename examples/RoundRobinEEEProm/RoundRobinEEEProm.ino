@@ -16,7 +16,7 @@ struct mydata
 } * EE = 0;
 
 // check and raise an error if data exceeds EEProm capacity
-eEE_CHECKSIZE(*EE)
+eEE_CHECKSIZE(*EE);
 
 // the setup routine runs once when you press reset:
 void setup()
@@ -25,16 +25,16 @@ void setup()
 
     // initialize the counter. actually this should be done once only.
     // for simplicity, we do initialize upon every restart of the device.
-    eEE_RRWRITE(EE->myA,  100);
-    eEE_RRWRITE(EE->myB, 1000);
+    eEE_WRITERRI( 100, EE->myA);
+    eEE_WRITERRI(1000, EE->myB);
 }
 
 // the loop routine runs over and over again forever:
 void loop()
 {
 	// read the values from EEProm
-    int8_t  a = eEE_RRREAD(EE->myA);
-    int16_t b = eEE_RRREAD(EE->myB);
+    int8_t  a = eEE_READRRI(EE->myA);
+    int16_t b = eEE_READRRI(EE->myB);
 
     Serial.println(a);
     Serial.println(b);

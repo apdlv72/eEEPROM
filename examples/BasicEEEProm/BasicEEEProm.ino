@@ -13,7 +13,7 @@ typedef struct { float f; double d; } mystruct;
 struct mydata { int  a; long b; mystruct c; } * EE = 0;
 
 // check and raise an error if data exceeds EEProm capacity
-eEE_CHECKSIZE(*EE)
+eEE_CHECKSIZE(*EE);
 
 // the setup routine runs once when you press reset:
 void setup()

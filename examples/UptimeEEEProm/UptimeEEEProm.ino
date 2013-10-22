@@ -29,7 +29,7 @@ struct mydata
 * EE = 0;
 
 // check and raise an error if data exceeds EEProm capacity
-eEE_CHECKSIZE(*EE)
+eEE_CHECKSIZE(*EE);
 
 uint16_t uptime_last = 0;
 uint16_t uptime      = 0;
@@ -44,8 +44,8 @@ void setup()
   if (MAGIC==magic)
   {
     Serial.println("setup: magic found"); 
-    uptime = uptime_last = eEE_RRREAD(EE->uptime);
-    starts = eEE_RRREAD(EE->starts);
+    uptime = uptime_last = eEE_READRRI(EE->uptime);
+    starts = eEE_READRRI(EE->starts);
     starts++;    
   }
   else
@@ -56,7 +56,7 @@ void setup()
     starts = 1;
   }
 
-  eEE_RRWRITE(EE->starts, starts);
+  eEE_WRITERRI(starts, EE->starts);
   
   Serial.print("setup: starts: "); Serial.println(starts);
   Serial.print("setup: uptime: "); Serial.println(uptime);
@@ -69,7 +69,7 @@ void loop()
   uptime = millis()/(60*60*1000);
   if (uptime_last!=uptime)
   {
-    eEE_RRWRITE(EE->uptime, uptime);
+    eEE_WRITERRI(uptime, EE->uptime);
     uptime_last = uptime;
   }
 

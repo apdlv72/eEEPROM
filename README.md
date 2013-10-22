@@ -21,8 +21,13 @@ content that should reside in the EEProm exceed its maximum capacity.
 To make these macros macros work, you must define a structure that wraps everything you
 need to store in EEProm as a pointer to address 0.
 
-	struct mydata { int  a; long b; } * EE = 0;
-	eEE_CHECKSIZE(*EE) // No semicolon here
+	struct mydata
+	{ 
+		int  a; 
+		long b; 
+	} * EE = 0;
+	
+	eEE_CHECKSIZE(*EE);
 
 The macro eEE_CHECKSIZE will fail with an error message, when the total size of the
 structure exceeds the maximum EEProm capacity. The error message however is a bit cryptic.
@@ -32,24 +37,26 @@ into funny problems at runtime anyway.
 Reading and writing the tokens in EEProm then will become merely a childs play without the 
 hassle of computing addreses and data sizes:
 
-	long l;
-	eEE_WRITE(l, EE->b);
-	
-	int i;  
-	eEE_READ(EE->a, i);
+	eEE_WRITEN(EE->b, 1234L);	
+	int i = eEE_READN(EE->a);
 
 Sometimes you need to store values quite often and will run into the 100k write cycles limits
 in a couple of hours or even minutes. To circumvent this, you would need to distribute the writes
 to single EEProm cell equally over a bunch of bytes. This is where the round robin macros come in.
 With the following definition (inside the EE struct depicted above):
 
-	eEE_rrint7_t(myA,200);
+	struct mydata 
+	{ 
+		int  a; 
+		long b; 
+		eEE_rrint7_t(myRRI,200); 
+	} * EE = 0;
 
 you creat an array of 200 8-bit integers where the MSB is used as a flag which one is the current one.
 To access the current value, the macros 
 
-	eEE_RRWRITE(EE->myA,  value);
-	int8_t value = eEE_RRREAD(EE->myA);  
+	eEE_WRITERRI(EE->myRRI,  value);
+	int8_t value = eEE_READRRI(EE->myA);  
 
 will write resp. read the value stored and extend the life time of your EEProm by a factor or 200/2
 thus at least 100k*200 = 20mio write operations or even more, because the library still will take care
@@ -63,16 +70,18 @@ For this to work, you wrap your data in a struct as you please and use the macro
 
 	struct mydata 
 	{ 
+		int  a; 
+		// ...
 		eEE_rrstruct(myStruct,10,mystruct);
 	} * EE = 0;
   
 Reading and writing the structs is provided by the macros
 
-	mystruct init = { a:111, b:222 };
-	eEE_RRWRITESTRUCT(EE->myStruct, init);
+	mystruct toBeSaved = { a:111, b:222 };
+	eEE_WRITERRS(toBeSaved, EE->myStruct);
 
-	mystruct s;
-	eEE_RRWRITESTRUCT(EE->myStruct, s);
+	mystruct readFromEE;
+	eEE_READRRS(EE->myStruct, readFromEE);
 	
 In this case, because a comparison might be quite time consuming for large structs, no check is 
 performed if current and future values do match, but new values written always.

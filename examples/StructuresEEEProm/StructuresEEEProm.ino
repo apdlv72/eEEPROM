@@ -2,7 +2,7 @@
  * This sample demonstrates the basic usage of the round robin strategy for arbitrary data.
  * The macro eEE_rrstruct() will create internally an array of structures that consist
  * of a "current" byte, followed by the actual user data.
- * The macros eEE_RRWRITESTRUCT() and eEE_RRWRITESTRUCT() will read/write these values
+ * The macros eEE_WRITERRS() and eEE_WRITERRS() will read/write these values
  * and take care of finding/setting the "current" byte on this array.
  */
 
@@ -19,7 +19,7 @@ struct mydata
 } * EE = 0;
 
 // check and raise an error if data exceeds EEProm capacity
-eEE_CHECKSIZE(*EE)
+eEE_CHECKSIZE(*EE);
 
 // the setup routine runs once when you press reset:
 void setup()
@@ -28,8 +28,8 @@ void setup()
 
 	mystruct init = { a:111, b:222 };
 
-	eEE_RRWRITE(EE->myInt,  100);
-	eEE_RRWRITESTRUCT(EE->myStruct, init);
+	eEE_WRITERRI(1000, EE->myInt);
+	eEE_WRITERRS(init, EE->myStruct);
 }
 
 // the loop routine runs over and over again forever:
@@ -38,8 +38,8 @@ void loop()
 	int      i;
 	mystruct s;
 
-	i = eEE_RRREAD(EE->myInt);
-	eEE_RRWRITESTRUCT(EE->myStruct, s);
+	i = eEE_READRRI(EE->myInt);
+	eEE_READRRS(EE->myStruct, s);
 
 	Serial.println(i);	 // 100
 	Serial.println(s.a); // 111
