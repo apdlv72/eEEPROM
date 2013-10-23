@@ -3,12 +3,12 @@
 
 #include <avr/eeprom.h>
 
-uint8_t eEEPROMClass::read(int addr)
+uint8_t eEEPROMClass::read(ADDR_T addr)
 {
 	return eeprom_read_byte((unsigned char *) addr);
 }
 
-void eEEPROMClass::write(int addr, uint8_t value)
+void eEEPROMClass::write(ADDR_T addr, uint8_t value)
 {
 	// write only if there is no change to avoid writy cycles
 	uint8_t old = read(addr);
@@ -18,60 +18,60 @@ void eEEPROMClass::write(int addr, uint8_t value)
 	}
 }
 
-void eEEPROMClass::doWrite(int addr, uint8_t value)
+void eEEPROMClass::doWrite(ADDR_T addr, uint8_t value)
 {
 	eeprom_write_byte((unsigned char *) addr, value);
 }
 
-uint16_t eEEPROMClass::readWord(int addr)
+uint16_t eEEPROMClass::readWord(ADDR_T addr)
 {
 	uint16_t w;
 	readData(addr, &w, sizeof(w));
 	return w;
 }
 
-void eEEPROMClass::writeLong(int addr, uint32_t l)
+void eEEPROMClass::writeLong(ADDR_T addr, uint32_t l)
 {
 	writeData(addr, &l, sizeof(l));
 }
 
-uint32_t eEEPROMClass::readLong(int addr)
+uint32_t eEEPROMClass::readLong(ADDR_T addr)
 {
 	uint32_t l;
 	readData(addr, &l, sizeof(l));
 	return l;
 }
 
-void eEEPROMClass::writeWord(int addr, uint16_t w)
+void eEEPROMClass::writeWord(ADDR_T addr, uint16_t w)
 {
 	writeData(addr, &w, sizeof(w));
 }
 
-float eEEPROMClass::readFloat(int addr)
+float eEEPROMClass::readFloat(ADDR_T addr)
 {
 	float f;
 	readData(addr, &f, sizeof(f));
 	return f;
 }
 
-void eEEPROMClass::writeFloat(int addr, float f)
+void eEEPROMClass::writeFloat(ADDR_T addr, float f)
 {
 	writeData(addr, &f, sizeof(f));
 }
 
-double eEEPROMClass::readDouble(int addr)
+double eEEPROMClass::readDouble(ADDR_T addr)
 {
 	double d;
 	readData(addr, &d, sizeof(d));
 	return d;
 }
 
-void eEEPROMClass::writeDouble(int addr, double d)
+void eEEPROMClass::writeDouble(ADDR_T addr, double d)
 {
 	writeData(addr, &d, sizeof(d));
 }
 
-void eEEPROMClass::readData(int addr, void * buf, int len)
+void eEEPROMClass::readData(ADDR_T addr, void * buf, int len)
 {
 	for (uint8_t * b=(uint8_t*)buf; len>0; len--, addr++, b++)
 	{
@@ -79,7 +79,7 @@ void eEEPROMClass::readData(int addr, void * buf, int len)
 	}	
 }
 
-void eEEPROMClass::writeData(int addr, const void * buf, int len)
+void eEEPROMClass::writeData(ADDR_T addr, const void * buf, int len)
 {
 	for (const uint8_t * b=(uint8_t*)buf; len>0; len--, addr++, b++)
 	{
@@ -87,7 +87,7 @@ void eEEPROMClass::writeData(int addr, const void * buf, int len)
 	}	
 }
 
-void eEEPROMClass::memFill(int addr, uint8_t data, uint16_t len)
+void eEEPROMClass::memFill(ADDR_T addr, uint8_t data, uint16_t len)
 {
 	for (; len>0; len--, addr++)
 	{
@@ -109,12 +109,12 @@ void eEEPROMClass::rrsWrite(s_rrstruct * rrstruct, uint16_t size, uint16_t count
 	for (uint16_t i=0; i<count; i++)
 	{
 		s_rrstruct test;
-		uint16_t addr1 = (uint16_t)&rrstruct[i];
+		ADDR_T addr1 = (ADDR_T)&rrstruct[i];
 		readData(addr1, &test, sizeof(test));
 		if (test.current)
 		{
-			uint16_t addr2 = (uint16_t)&(rrstruct[(i+1)%count]);
-			uint16_t addr3 = (uint16_t)&(rrstruct[(i+1)%count].data);
+			ADDR_T addr2 = (ADDR_T)&(rrstruct[(i+1)%count]);
+			ADDR_T addr3 = (ADDR_T)&(rrstruct[(i+1)%count].data);
 
 			writeData(addr2, &test, sizeof(test)); // mark next entry current
 			writeData(addr3, user_struct, size);   // write new value
@@ -131,11 +131,11 @@ void eEEPROMClass::rrsRead(s_rrstruct * rrstruct, uint16_t size, uint16_t count,
 	for (uint16_t i=0; i<count; i++)
 	{
 		s_rrstruct test;
-		uint16_t addr1 = (uint16_t)&rrstruct[i];
+		ADDR_T addr1 = (ADDR_T)&rrstruct[i];
 		readData(addr1, &test, sizeof(test));
 		if (test.current)
 		{
-			uint16_t addr2 = (uint16_t)&(rrstruct[i].data);
+			uint16_t addr2 = (ADDR_T)&(rrstruct[i].data);
 			readData(addr2, user_struct, size);   // write new value
 			return;
 		}

@@ -17,6 +17,12 @@ See README for more details.
 #include <avr/pgmspace.h>
 #include <Arduino.h>
 
+#ifdef OSX
+	#define ADDR_T long
+#else	
+	#define ADDR_T int
+#endif
+
 /*
  * Structure to store integer values round robin.
  * The MSB bit defines which value is the current one and the remaining bits store the actual value.
@@ -36,28 +42,28 @@ typedef struct { uint8_t current; uint8_t data; } s_rrstruct;
 class eEEPROMClass
 {
   public:
-    uint8_t read(int addr);
-    void write(int addr, uint8_t);
+    uint8_t read(ADDR_T addr);
+    void write(ADDR_T addr, uint8_t);
     
     // do not check target value but write through to the  EEPROM
-    void doWrite(int addr, uint8_t value);
+    void doWrite(ADDR_T addr, uint8_t value);
 
-    uint16_t readWord(int addr);
-    void writeWord(int addr, uint16_t);
+    uint16_t readWord(ADDR_T addr);
+    void writeWord(ADDR_T addr, uint16_t);
     
-    uint32_t readLong(int addr);
-    void writeLong(int addr, uint32_t);
+    uint32_t readLong(ADDR_T addr);
+    void writeLong(ADDR_T addr, uint32_t);
     
-    float readFloat(int addr);
-    void writeFloat(int addr, float);
+    float readFloat(ADDR_T addr);
+    void writeFloat(ADDR_T addr, float);
 
-    double readDouble(int addr);
-    void writeDouble(int addr, double);
+    double readDouble(ADDR_T addr);
+    void writeDouble(ADDR_T addr, double);
     
-    void readData(int addr, void * buf, int len);
-    void writeData(int addr, const void * buf, int len);
+    void readData(ADDR_T addr, void * buf, int len);
+    void writeData(ADDR_T addr, const void * buf, int len);
     
-    void memFill(int addr, uint8_t data, uint16_t len);
+    void memFill(ADDR_T addr, uint8_t data, uint16_t len);
 
     void rrsRead (s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct);
     void rrsWrite(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct);
@@ -65,7 +71,7 @@ class eEEPROMClass
     template <class NUM> NUM numRead(NUM * piEE)
     {
       NUM    iRam = 0;
-      uint16_t addr = (uint16_t)piEE;
+      ADDR_T addr = (ADDR_T)piEE;
       readData(addr, (void*)&iRam, sizeof(iRam));
       return iRam;
     }
@@ -74,14 +80,15 @@ class eEEPROMClass
     //   const s_eeprom_data * EEPROM = 0;
     template <class NUM> void numWrite(const NUM * piEE, NUM iRam)
     {
-      uint16_t addr = (uint16_t)piEE;
+      ADDR_T addr = (ADDR_T)piEE;
       writeData(addr, (void*)&iRam, sizeof(iRam));
     }
 
+	#ifndef OSX
     // template RRINT will become one of s_rrint{7|15|31} through the macro eEE_RRREAD
     template <class RRINT> __decltype(RRINT::TYPE) rriRead(RRINT * rrint, uint16_t count)
     {
-    	uint16_t addr = (uint16_t)rrint;
+    	ADDR_T addr = (ADDR_T)rrint;
     	RRINT temp;
     	for (uint16_t i=0; i<count; i++, addr+=sizeof(s_rrint7))
     	{
@@ -98,15 +105,15 @@ class eEEPROMClass
 		next.current = 1;
 		next.value   = value;
 
-    	for (uint16_t i=0; i<count; i++)
+    	for (ADDR_T i=0; i<count; i++)
     	{
-        	uint16_t addr1 = (uint16_t)&rrint[i];
+        	ADDR_T addr1 = (ADDR_T)&rrint[i];
     		readData(addr1, &temp, sizeof(temp));
     		if (temp.current)
     		{
     			if (temp.value==value) return; // no change
 
-    			uint16_t addr2 = (uint16_t)&rrint[(i+1)%count];
+    			ADDR_T addr2 = (ADDR_T)&rrint[(i+1)%count];
     			temp.current = 0;
 
     			writeData(addr2, &next, sizeof(next));
@@ -115,16 +122,17 @@ class eEEPROMClass
     		}
     	}
 
-    	uint16_t addr = (uint16_t)rrint;
+    	ADDR_T addr = (ADDR_T)rrint;
     	writeData(addr, &next, sizeof(next));
     }
+    #endif
 
     void showPgmString (PGM_P s);
 };
 
 extern eEEPROMClass eEEPROM;
 
-#define eEE_ADDR(EETOKEN) ((uint16_t)(void*)&(EETOKEN))
+#define eEE_ADDR(EETOKEN) ((ADDR_T)(void*)&(EETOKEN))
 #define eEE_WRITE(SRC, EETOKEN) { eEEPROM.writeData(eEE_ADDR(EETOKEN), &(SRC),  sizeof(EETOKEN)); }
 #define eEE_READ(EETOKEN, DEST) { eEEPROM.readData( eEE_ADDR(EETOKEN), &(DEST), sizeof(DEST));    }
 #define eEE_ZERO(EETOKEN)       { eEEPROM.memFill(eEE_ADDR(EETOKEN), 0, sizeof(EETOKEN)); }
