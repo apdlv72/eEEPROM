@@ -70,7 +70,7 @@ class eEEPROMClass
 
     template <class NUM> NUM numRead(NUM * piEE)
     {
-      NUM    iRam = 0;
+      volatile NUM iRam = 0;
       ADDR_T addr = (ADDR_T)piEE;
       readData(addr, (void*)&iRam, sizeof(iRam));
       return iRam;

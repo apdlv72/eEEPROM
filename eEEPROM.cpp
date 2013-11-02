@@ -74,9 +74,9 @@ void eEEPROMClass::writeDouble(ADDR_T addr, double d)
 void eEEPROMClass::readData(ADDR_T addr, void * buf, int len)
 {
 	for (uint8_t * b=(uint8_t*)buf; len>0; len--, addr++, b++)
-	{
+	{		
 		*b = read(addr);
-	}	
+	}
 }
 
 void eEEPROMClass::writeData(ADDR_T addr, const void * buf, int len)
