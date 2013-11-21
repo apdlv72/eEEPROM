@@ -104,6 +104,12 @@ void eEEPROMClass::showPgmString (PGM_P s)
 	}
 }
 
+void eEEPROMClass::showPgmStringLn(PGM_P s)
+{
+	showPgmString(s); 
+	Serial.println();
+}
+
 void eEEPROMClass::rrsWrite(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct)
 {
 	for (uint16_t i=0; i<count; i++)

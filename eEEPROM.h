@@ -34,10 +34,10 @@ See README for more details.
  * the correct type of the member "value". It should NOT eat up any valuable RAM nor EEProm
  * space since it is static, moreover its value never read.
  */
-typedef struct { int8_t  current : 1; int8_t  value :  7; static int8_t  TYPE; } s_rrint7;
-typedef struct { int16_t current : 1; int16_t value : 15; static int16_t TYPE; } s_rrint15;
-typedef struct { int32_t current : 1; int32_t value : 31; static int32_t TYPE; } s_rrint31;
-typedef struct { uint8_t current; uint8_t data; } s_rrstruct;
+typedef struct s_rrint7   { int8_t  current : 1; int8_t  value :  7; static int8_t  TYPE; } s_rrint7;
+typedef struct s_rrint15  { int16_t current : 1; int16_t value : 15; static int16_t TYPE; } s_rrint15;
+typedef struct s_rrint31  { int32_t current : 1; int32_t value : 31; static int32_t TYPE; } s_rrint31;
+typedef struct s_rrstruct { uint8_t current; uint8_t data; } s_rrstruct;
 
 class eEEPROMClass
 {
@@ -127,7 +127,8 @@ class eEEPROMClass
     }
     #endif
 
-    void showPgmString (PGM_P s);
+    void showPgmString(PGM_P s);
+    void showPgmStringLn(PGM_P s);
 };
 
 extern eEEPROMClass eEEPROM;
@@ -139,7 +140,8 @@ extern eEEPROMClass eEEPROM;
 
 #define eEE_CHECKSIZE(DATA) struct FailOnEEPromExceess { int c[(E2END)-sizeof((DATA))]; }
 
-#define PPRINT(TEXT) eEEPROM.showPgmString(PSTR(TEXT))
+#define PPRINT(TEXT)   eEEPROM.showPgmString(PSTR(TEXT))
+#define PPRINTLN(TEXT) eEEPROM.showPgmStringLn(PSTR(TEXT))
 
 /*
  * Macros that define round robin integer arrays with user defined size;
