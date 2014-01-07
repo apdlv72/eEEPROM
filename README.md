@@ -55,7 +55,7 @@ With the following definition (inside the EE struct depicted above):
 you creat an array of 200 8-bit integers where the MSB is used as a flag which one is the current one.
 To access the current value, the macros 
 
-	eEE_WRITERRI(EE->myRRI,  value);
+	eEE_WRITERRI(value, EE->myRRI);
 	int8_t value = eEE_READRRI(EE->myA);  
 
 will write resp. read the value stored and extend the life time of your EEProm by a factor or 200/2
