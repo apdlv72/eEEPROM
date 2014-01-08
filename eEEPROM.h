@@ -84,7 +84,6 @@ class eEEPROMClass
       writeData(addr, (void*)&iRam, sizeof(iRam));
     }
 
-	#ifndef OSX
     // template RRINT will become one of s_rrint{7|15|31} through the macro eEE_RRREAD
     template <class RRINT> __decltype(RRINT::TYPE) rriRead(RRINT * rrint, uint16_t count)
     {
@@ -125,7 +124,6 @@ class eEEPROMClass
     	ADDR_T addr = (ADDR_T)rrint;
     	writeData(addr, &next, sizeof(next));
     }
-    #endif
 
     void showPgmString(PGM_P s);
     void showPgmStringLn(PGM_P s);
