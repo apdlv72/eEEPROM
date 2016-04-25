@@ -14,7 +14,9 @@ See README for more details.
 #define eEEPROM_h
 
 #include <inttypes.h>
+/*
 #include <avr/pgmspace.h>
+*/
 #include <Arduino.h>
 
 #ifdef OSX
@@ -125,8 +127,10 @@ class eEEPROMClass
     	writeData(addr, &next, sizeof(next));
     }
 
+    /* moved now to ePGM module since was mixing thing up: eeprom and flash
     void showPgmString(PGM_P s);
     void showPgmStringLn(PGM_P s);
+    */
 };
 
 extern eEEPROMClass eEEPROM;

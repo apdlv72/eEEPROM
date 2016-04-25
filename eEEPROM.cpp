@@ -1,11 +1,14 @@
 #include "Arduino.h"
 #include "eEEPROM.h"
 
-#include <avr/eeprom.h>
+// does not work (any more? not with esp8266?)
+//#include <avr/eeprom.h>
+#include <EEPROM.h>
 
 uint8_t eEEPROMClass::read(ADDR_T addr)
 {
-	return eeprom_read_byte((unsigned char *) addr);
+	//return eeprom_read_byte((unsigned char *) addr);
+	return EEPROM.read((int)addr);
 }
 
 void eEEPROMClass::write(ADDR_T addr, uint8_t value)
@@ -14,13 +17,16 @@ void eEEPROMClass::write(ADDR_T addr, uint8_t value)
 	uint8_t old = read(addr);
 	if (old!=value)
 	{
-		eeprom_write_byte((unsigned char *) addr, value);
+		//eeprom_write_byte((unsigned char *) addr, value);
+		EEPROM.write((int)addr, value);
+		EEPROM.commit();
 	}
 }
 
 void eEEPROMClass::doWrite(ADDR_T addr, uint8_t value)
 {
-	eeprom_write_byte((unsigned char *) addr, value);
+	//eeprom_write_byte((unsigned char *) addr, value);
+	EEPROM.write((int)addr, value);
 }
 
 uint16_t eEEPROMClass::readWord(ADDR_T addr)
@@ -76,6 +82,7 @@ void eEEPROMClass::readData(ADDR_T addr, void * buf, int len)
 	for (uint8_t * b=(uint8_t*)buf; len>0; len--, addr++, b++)
 	{		
 		*b = read(addr);
+		yield(); // to avoid ESP8266 watchdog killing
 	}
 }
 
@@ -84,6 +91,7 @@ void eEEPROMClass::writeData(ADDR_T addr, const void * buf, int len)
 	for (const uint8_t * b=(uint8_t*)buf; len>0; len--, addr++, b++)
 	{
 		write(addr, *b);
+		yield(); delay(1); Serial.print("w"); delay(1);
 	}	
 }
 
@@ -92,9 +100,11 @@ void eEEPROMClass::memFill(ADDR_T addr, uint8_t data, uint16_t len)
 	for (; len>0; len--, addr++)
 	{
 		write(addr, data);
+		yield(); // to avoid ESP8266 watchdog killing  
 	}
 }
 
+/*
 void eEEPROMClass::showPgmString (PGM_P s)
 {
 	char c;
@@ -109,6 +119,7 @@ void eEEPROMClass::showPgmStringLn(PGM_P s)
 	showPgmString(s); 
 	Serial.println();
 }
+*/
 
 void eEEPROMClass::rrsWrite(s_rrstruct * rrstruct, uint16_t size, uint16_t count, void * user_struct)
 {
