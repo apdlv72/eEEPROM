@@ -32,7 +32,7 @@ struct mydata
 eEE_CHECKSIZE(*EE);
 
 uint16_t uptime_last = 0;
-uint16_t uptime      = 0;
+uint16_t uptimeMinutes      = 0;
 uint32_t starts      = 0;
 
 // the setup routine runs once when you press reset:
@@ -44,7 +44,7 @@ void setup()
   if (MAGIC==magic)
   {
     Serial.println("setup: magic found"); 
-    uptime = uptime_last = eEE_READRRI(EE->uptime);
+    uptimeMinutes = uptime_last = eEE_READRRI(EE->uptime);
     starts = eEE_READRRI(EE->starts);
     starts++;    
   }
@@ -52,29 +52,29 @@ void setup()
   {
     Serial.println("setup: no magic found, 1st time init"); 
     eEEPROM.writeWord(EE->magic, MAGIC);
-    uptime_last = uptime = 0;
+    uptime_last = uptimeMinutes = 0;
     starts = 1;
   }
 
   eEE_WRITERRI(starts, EE->starts);
   
   Serial.print("setup: starts: "); Serial.println(starts);
-  Serial.print("setup: uptime: "); Serial.println(uptime);
+  Serial.print("setup: uptime: "); Serial.println(uptimeMinutes);
 }
 
 // the loop routine runs over and over again forever:
 void loop()
 {
   // write uptime (in hours) whenever it changes
-  uptime = millis()/(60*60*1000);
-  if (uptime_last!=uptime)
+  uptimeMinutes = millis()/(60*60*1000);
+  if (uptime_last!=uptimeMinutes)
   {
-    eEE_WRITERRI(uptime, EE->uptime);
-    uptime_last = uptime;
+    eEE_WRITERRI(uptimeMinutes, EE->uptime);
+    uptime_last = uptimeMinutes;
   }
 
   // do something usefull here like blinking LEDs
   
-  Serial.print("loop: uptime: "); Serial.print(uptime); Serial.println(" h");  
+  Serial.print("loop: uptime: "); Serial.print(uptimeMinutes); Serial.println(" h");  
   delay(10*1000);
 }
